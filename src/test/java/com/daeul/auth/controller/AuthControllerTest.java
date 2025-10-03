@@ -1,9 +1,12 @@
 package com.daeul.auth.controller;
 
+import com.daeul.auth.domain.entity.User;
+import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.exception.InvalidPasswordException;
 import com.daeul.auth.security.JwtTokenProvider;
 import io.jsonwebtoken.Jwts;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.service.AuthService;
@@ -37,6 +40,8 @@ class AuthControllerTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("정상 토큰으로 /me 호출 시 사용자 정보 반환")
@@ -46,8 +51,9 @@ class AuthControllerTest {
                 .email("me@test.com")
                 .password("password123")
                 .build());
+        Optional<User> userOp = userRepository.findByEmail("me@test.com");
 
-        String accessToken = jwtTokenProvider.generateAccessToken("me@test.com");
+        String accessToken = jwtTokenProvider.generateAccessToken(userOp.get().getId());
 
         // when & then
         mockMvc.perform(get("/api/auth/me")

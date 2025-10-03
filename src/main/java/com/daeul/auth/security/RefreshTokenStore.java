@@ -11,21 +11,22 @@ public class RefreshTokenStore {
 
     private final StringRedisTemplate redisTemplate;
     private static final long REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; // 7일 (초)
+    private final String REFRESH_TOKEN_PREFIX = "refresh:";
 
-    public void saveToken(String email, String refreshToken) {
-        redisTemplate.opsForValue().set("refresh:" + email, refreshToken, REFRESH_TOKEN_TTL, TimeUnit.SECONDS);
+    public void saveToken(Long id, String refreshToken) {
+        redisTemplate.opsForValue().set(REFRESH_TOKEN_PREFIX + id, refreshToken, REFRESH_TOKEN_TTL, TimeUnit.SECONDS);
     }
 
-    public String getToken(String email) {
-        return redisTemplate.opsForValue().get("refresh:" + email);
+    public String getToken(Long id) {
+        return redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + id);
     }
 
-    public boolean validateToken(String email, String refreshToken) {
-        String stored = getToken(email);
+    public boolean validateToken(Long id, String refreshToken) {
+        String stored = getToken(id);
         return stored != null && stored.equals(refreshToken);
     }
 
-    public void removeToken(String email) {
-        redisTemplate.delete("refresh:" + email);
+    public void removeToken(Long id) {
+        redisTemplate.delete(REFRESH_TOKEN_PREFIX + id);
     }
 }

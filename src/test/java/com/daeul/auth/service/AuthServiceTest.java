@@ -9,6 +9,7 @@ import com.daeul.auth.exception.InvalidRefreshTokenException;
 import com.daeul.auth.exception.TooManyLoginAttemptsException;
 import com.daeul.auth.exception.UserNotFoundException;
 import com.daeul.auth.security.RefreshTokenStore;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import com.daeul.auth.dto.LoginRequest;
@@ -192,7 +193,7 @@ class AuthServiceTest {
         TokenResponse tokens = authService.login(loginRequest, "127.0.0.1");
 
         // when
-        TokenResponse newTokens = authService.reissue("reissue@test.com", tokens.getRefreshToken());
+        TokenResponse newTokens = authService.reissue(tokens.getRefreshToken());
 
         // then
         assertThat(newTokens.getAccessToken()).isNotBlank();
@@ -218,7 +219,7 @@ class AuthServiceTest {
         authService.login(loginRequest, "127.0.0.1");
 
         // when & then
-        assertThatThrownBy(() -> authService.reissue("invalidRefresh@test.com", "fake-refresh-token"))
+        assertThatThrownBy(() -> authService.reissue("fake-refresh-token"))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining(INVALID_TOKEN.getMessage());
     }
@@ -242,8 +243,10 @@ class AuthServiceTest {
         // 로그아웃 실행
         authService.logout("logout@test.com");
 
+        Optional<User> userOp = userRepository.findByEmail("logout@test.com");
+
         // then
-        String storedToken = refreshTokenStore.getToken("logout@test.com");
+        String storedToken = refreshTokenStore.getToken(userOp.get().getId());
         assertThat(storedToken).isNull(); // 삭제되어야 함
     }
 
@@ -268,7 +271,7 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() ->
-                authService.reissue("reuse@test.com", tokens.getRefreshToken()))
+                authService.reissue(tokens.getRefreshToken()))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining(INVALID_TOKEN.getMessage());
     }

@@ -12,12 +12,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -45,7 +45,7 @@ public class AuthController {
     @Operation(summary = "토큰 재발급", description = "RefreshToken을 이용해 AccessToken을 재발급합니다.")
     @PostMapping("/reissue")
     public TokenResponse reissue(@RequestBody ReissueRequest request) {
-        return authService.reissue(request.getEmail(), request.getRefreshToken());
+        return authService.reissue(request.getRefreshToken());
     }
 
     @Operation(summary = "로그아웃", description = "RefreshToken을 무효화합니다.")
@@ -55,10 +55,10 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "내 정보 조회", description = "JWT AccessToken을 이용하여 사용자 정보를 조회합니다.")
     @GetMapping("/me")
-    public UserResponse getUserInfo(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        return authService.getUserInfo(token);
+    @Operation(summary = "내 정보 조회", description = "JWT AccessToken을 이용하여 사용자 정보를 조회합니다.")
+    public ResponseEntity<UserResponse> getMe(Authentication authentication) {
+        UserResponse response = authService.getUserInfo(authentication);
+        return ResponseEntity.ok(response);
     }
 }

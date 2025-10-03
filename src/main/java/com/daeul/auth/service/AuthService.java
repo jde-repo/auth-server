@@ -16,7 +16,10 @@ import com.daeul.auth.exception.UserNotFoundException;
 import com.daeul.auth.security.JwtTokenProvider;
 import com.daeul.auth.security.LoginRateLimiter;
 import com.daeul.auth.security.RefreshTokenStore;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -54,41 +57,42 @@ public class AuthService {
         }
 
         // 3. 토큰 발급
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
 
         // 4. RefreshToken 저장 (Redis)
-        refreshTokenStore.saveToken(user.getEmail(), refreshToken);
+        refreshTokenStore.saveToken(user.getId(), refreshToken);
 
         return new TokenResponse(accessToken, refreshToken);
     }
 
 
 
-    public UserResponse getUserInfo(String token) {
-        String email = jwtTokenProvider.validateAndGetEmail(token);
-
-        User user = userRepository.findByEmail(email)
+    public UserResponse getUserInfo(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userRepository.findById(Long.valueOf(userDetails.getUsername()))
                 .orElseThrow(() -> new UserNotFoundException(ExceptionMessages.USER_NOT_FOUND.getMessage()));
         return UserResponse.from(user);
     }
 
+    public TokenResponse reissue(String refreshToken) {
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
-    public TokenResponse reissue(String email, String refreshToken) {
-        if (!refreshTokenStore.validateToken(email, refreshToken)) {
+        if (!refreshTokenStore.validateToken(userId, refreshToken)) {
             throw new InvalidRefreshTokenException(INVALID_TOKEN.getMessage());
         }
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(email);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userId);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId);
 
-        refreshTokenStore.saveToken(email, newRefreshToken);
+        refreshTokenStore.saveToken(userId, newRefreshToken);
 
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
     public void logout(String email) {
-        refreshTokenStore.removeToken(email);
+        Optional<User> userOp = userRepository.findByEmail(email);
+        userOp.ifPresent(user -> refreshTokenStore.removeToken(user.getId()));
     }
 
 }
