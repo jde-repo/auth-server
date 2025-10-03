@@ -1,5 +1,6 @@
 package com.daeul.auth.service;
 
+import com.daeul.auth.common.ExceptionMessages;
 import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.exception.DuplicateEmailException;
@@ -21,6 +22,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.daeul.auth.common.ExceptionMessages.EMAIL_ALREADY_EXISTS;
+import static com.daeul.auth.common.ExceptionMessages.INVALID_TOKEN;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
@@ -169,12 +172,12 @@ class AuthServiceTest {
         // when & then
         assertThatThrownBy(() -> authService.login(loginRequest, "127.0.0.1"))
                 .isInstanceOf(InvalidPasswordException.class)
-                .hasMessageContaining("비밀번호가 일치하지 않습니다");
+                .hasMessageContaining(ExceptionMessages.INVALID_PASSWORD.getMessage());
     }
 
     @Test
     @DisplayName("RefreshToken으로 AccessToken 재발급 성공")
-    void reissueSuccessTest() {
+    void reissueSuccessTest() throws InterruptedException {
         // given
         SignupRequest signupRequest = SignupRequest.builder()
                 .email("reissue@test.com")
@@ -217,7 +220,7 @@ class AuthServiceTest {
         // when & then
         assertThatThrownBy(() -> authService.reissue("invalidRefresh@test.com", "fake-refresh-token"))
                 .isInstanceOf(InvalidRefreshTokenException.class)
-                .hasMessageContaining("유효하지 않은 Refresh Token입니다.");
+                .hasMessageContaining(INVALID_TOKEN.getMessage());
     }
 
     @Test
@@ -243,5 +246,56 @@ class AuthServiceTest {
         String storedToken = refreshTokenStore.getToken("logout@test.com");
         assertThat(storedToken).isNull(); // 삭제되어야 함
     }
+
+    @Test
+    @DisplayName("로그아웃 이후 RefreshToken 재사용 불가")
+    void logoutTokenReuseFailTest() {
+        // given
+        SignupRequest signupRequest = SignupRequest.builder()
+                .email("reuse@test.com")
+                .password("password123")
+                .build();
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("reuse@test.com")
+                .password("password123")
+                .build();
+        TokenResponse tokens = authService.login(loginRequest, "127.0.0.1");
+
+        // 로그아웃 실행
+        authService.logout("reuse@test.com");
+
+        // when & then
+        assertThatThrownBy(() ->
+                authService.reissue("reuse@test.com", tokens.getRefreshToken()))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining(INVALID_TOKEN.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("중복 이메일은 회원가입 안됨")
+    void signupDuplicateEmailTest() {
+        // given
+        SignupRequest request1 = SignupRequest.builder()
+                .email("duplicate@test.com")
+                .password("password123")
+                .build();
+
+        SignupRequest request2 = SignupRequest.builder()
+                .email("duplicate@test.com") // 동일 이메일
+                .password("anotherPassword")
+                .build();
+
+        // when
+        authService.signup(request1); // 첫 가입은 정상 동작
+
+        // then - 두 번째 가입 시 DuplicateEmailException 발생해야 함
+        assertThatThrownBy(() -> authService.signup(request2))
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessageContaining(EMAIL_ALREADY_EXISTS.getMessage());
+    }
+
 
 }

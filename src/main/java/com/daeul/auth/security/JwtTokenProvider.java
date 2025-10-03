@@ -1,8 +1,12 @@
 package com.daeul.auth.security;
 
+import static com.daeul.auth.common.ExceptionMessages.EXPIRED_TOKEN;
+import static com.daeul.auth.common.ExceptionMessages.INVALID_TOKEN;
+
 import com.daeul.auth.exception.ExpiredTokenException;
 import com.daeul.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.*;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.util.Date;
@@ -19,6 +23,7 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenValidity()))
+                .setId(UUID.randomUUID().toString())
                 .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecret())
                 .compact();
     }
@@ -28,9 +33,11 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshTokenValidity()))
+                .setId(UUID.randomUUID().toString())
                 .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecret())
                 .compact();
     }
+
 
     public String validateAndGetEmail(String token) {
         try {
@@ -40,9 +47,9 @@ public class JwtTokenProvider {
                     .getBody()
                     .getSubject();
         } catch (ExpiredJwtException e) {
-            throw new ExpiredTokenException("토큰이 만료되었습니다.");
+            throw new ExpiredTokenException(EXPIRED_TOKEN.getMessage());
         } catch (JwtException | IllegalArgumentException e) {
-            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
+            throw new InvalidTokenException(INVALID_TOKEN.getMessage());
         }
     }
 }

@@ -95,26 +95,5 @@ class AuthControllerTest {
                 .andExpect(content().string("토큰이 만료되었습니다."));
     }
 
-    @Test
-    @DisplayName("비밀번호 불일치 로그인 실패")
-    void loginInvalidPasswordTest() {
-        // given
-        SignupRequest signupRequest = SignupRequest.builder()
-                .email("wrongpass@test.com")
-                .password("password123")
-                .build();
-        authService.signup(signupRequest);
-
-        LoginRequest loginRequest = LoginRequest.builder()
-                .email("wrongpass@test.com")
-                .password("invalidPassword")
-                .build();
-
-        // when & then
-        assertThatThrownBy(() -> authService.login(loginRequest, "127.0.0.1"))
-                .isInstanceOf(InvalidPasswordException.class)
-                .hasMessageContaining("비밀번호가 일치하지 않습니다.");
-    }
-
 }
 

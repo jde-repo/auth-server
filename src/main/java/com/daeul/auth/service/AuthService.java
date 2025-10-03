@@ -1,5 +1,8 @@
 package com.daeul.auth.service;
 
+import static com.daeul.auth.common.ExceptionMessages.INVALID_TOKEN;
+
+import com.daeul.auth.common.ExceptionMessages;
 import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.dto.LoginRequest;
@@ -29,7 +32,7 @@ public class AuthService {
 
     public void signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateEmailException("이미 가입된 이메일입니다.");
+            throw new DuplicateEmailException(ExceptionMessages.EMAIL_ALREADY_EXISTS.getMessage());
         }
         User user = User.builder()
                 .email(request.getEmail())
@@ -44,10 +47,10 @@ public class AuthService {
 
         // 2. 사용자 검증
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 이메일입니다."));
+                .orElseThrow(() -> new UserNotFoundException(ExceptionMessages.USER_NOT_FOUND.getMessage()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
+            throw new InvalidPasswordException(ExceptionMessages.INVALID_PASSWORD.getMessage());
         }
 
         // 3. 토큰 발급
@@ -66,14 +69,14 @@ public class AuthService {
         String email = jwtTokenProvider.validateAndGetEmail(token);
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("해당 사용자가 존재하지 않습니다."));
+                .orElseThrow(() -> new UserNotFoundException(ExceptionMessages.USER_NOT_FOUND.getMessage()));
         return UserResponse.from(user);
     }
 
 
     public TokenResponse reissue(String email, String refreshToken) {
         if (!refreshTokenStore.validateToken(email, refreshToken)) {
-            throw new InvalidRefreshTokenException("유효하지 않은 Refresh Token입니다.");
+            throw new InvalidRefreshTokenException(INVALID_TOKEN.getMessage());
         }
 
         String newAccessToken = jwtTokenProvider.generateAccessToken(email);

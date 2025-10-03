@@ -1,15 +1,12 @@
 package com.daeul.auth.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Builder
-public class SignupRequest {
+@NoArgsConstructor
+@AllArgsConstructor
+public class LogoutRequest {
     private String email;
-    private String password;
 }
