@@ -1,15 +1,12 @@
 package com.daeul.auth.controller;
 
-import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
 import com.daeul.auth.dto.UserResponse;
-import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.service.AuthService;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,17 +35,16 @@ public class AuthController {
         return authService.login(request, ip);
     }
 
-//    @PostMapping("/reissue")
-//    public TokenResponse reissue(@RequestParam String email, @RequestParam String refreshToken) {
-//        return authService.reissue(email, refreshToken);
-//    }
-//
-//    @PostMapping("/logout")
-//    public String logout(@RequestParam String email) {
-//        authService.logout(email);
-//        return "로그아웃 성공";
-//    }
+    @PostMapping("/reissue")
+    public TokenResponse reissue(@RequestParam String email, @RequestParam String refreshToken) {
+        return authService.reissue(email, refreshToken);
+    }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestParam String email) {
+        authService.logout(email);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping("/me")
     public UserResponse getUserInfo(@RequestHeader("Authorization") String authHeader) {

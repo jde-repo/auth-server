@@ -4,8 +4,10 @@ import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.exception.InvalidPasswordException;
+import com.daeul.auth.exception.InvalidRefreshTokenException;
 import com.daeul.auth.exception.TooManyLoginAttemptsException;
 import com.daeul.auth.exception.UserNotFoundException;
+import com.daeul.auth.security.RefreshTokenStore;
 import org.junit.jupiter.api.Test;
 
 import com.daeul.auth.dto.LoginRequest;
@@ -36,6 +38,9 @@ class AuthServiceTest {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private RefreshTokenStore refreshTokenStore;
 
     @BeforeEach
     void setup() {
@@ -167,23 +172,76 @@ class AuthServiceTest {
                 .hasMessageContaining("비밀번호가 일치하지 않습니다");
     }
 
-//    @Test
-//    @DisplayName("RefreshToken으로 새로운 AccessToken을 재발급할 수 있다")
-//    void reissueTest() {
-//        // given
-//        SignupRequest signupRequest = SignupRequest.builder().email("reissue@test.com").password("password123").build();
-//        authService.signup(signupRequest);
-//
-//        LoginRequest loginRequest = LoginRequest.builder().email("reissue@test.com").password("pass1234").build();
-//
-//        TokenResponse tokens = authService.login(loginRequest);
-//
-//        // when
-//        TokenResponse newTokens = authService.reissue("reissue@test.com", tokens.getRefreshToken());
-//
-//        // then
-//        assertThat(newTokens.getAccessToken()).isNotBlank();
-//        assertThat(newTokens.getRefreshToken()).isNotBlank();
-//        assertThat(newTokens.getAccessToken()).isNotEqualTo(tokens.getAccessToken());
-//    }
+    @Test
+    @DisplayName("RefreshToken으로 AccessToken 재발급 성공")
+    void reissueSuccessTest() {
+        // given
+        SignupRequest signupRequest = SignupRequest.builder()
+                .email("reissue@test.com")
+                .password("password123")
+                .build();
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("reissue@test.com")
+                .password("password123")
+                .build();
+        TokenResponse tokens = authService.login(loginRequest, "127.0.0.1");
+
+        // when
+        TokenResponse newTokens = authService.reissue("reissue@test.com", tokens.getRefreshToken());
+
+        // then
+        assertThat(newTokens.getAccessToken()).isNotBlank();
+        assertThat(newTokens.getRefreshToken()).isNotBlank();
+        assertThat(newTokens.getAccessToken()).isNotEqualTo(tokens.getAccessToken()); // 새로운 토큰이어야 함
+    }
+
+    @Test
+    @DisplayName("RefreshToken 불일치 시 재발급 실패")
+    void reissueInvalidTokenTest() {
+        // given
+        SignupRequest signupRequest = SignupRequest.builder()
+                .email("invalidRefresh@test.com")
+                .password("password123")
+                .build();
+        authService.signup(signupRequest);
+
+        // 로그인해서 RefreshToken 발급
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("invalidRefresh@test.com")
+                .password("password123")
+                .build();
+        authService.login(loginRequest, "127.0.0.1");
+
+        // when & then
+        assertThatThrownBy(() -> authService.reissue("invalidRefresh@test.com", "fake-refresh-token"))
+                .isInstanceOf(InvalidRefreshTokenException.class)
+                .hasMessageContaining("유효하지 않은 Refresh Token입니다.");
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 RefreshToken 제거됨")
+    void logoutTest() {
+        // given
+        SignupRequest signupRequest = SignupRequest.builder()
+                .email("logout@test.com")
+                .password("password123")
+                .build();
+        authService.signup(signupRequest);
+
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("logout@test.com")
+                .password("password123")
+                .build();
+        TokenResponse tokens = authService.login(loginRequest, "127.0.0.1");
+
+        // 로그아웃 실행
+        authService.logout("logout@test.com");
+
+        // then
+        String storedToken = refreshTokenStore.getToken("logout@test.com");
+        assertThat(storedToken).isNull(); // 삭제되어야 함
+    }
+
 }

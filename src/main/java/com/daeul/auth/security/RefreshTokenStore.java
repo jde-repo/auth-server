@@ -12,15 +12,20 @@ public class RefreshTokenStore {
     private final StringRedisTemplate redisTemplate;
     private static final long REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; // 7일 (초)
 
-    public void save(String email, String refreshToken) {
+    public void saveToken(String email, String refreshToken) {
         redisTemplate.opsForValue().set("refresh:" + email, refreshToken, REFRESH_TOKEN_TTL, TimeUnit.SECONDS);
     }
 
-    public String get(String email) {
+    public String getToken(String email) {
         return redisTemplate.opsForValue().get("refresh:" + email);
     }
 
-    public void delete(String email) {
+    public boolean validateToken(String email, String refreshToken) {
+        String stored = getToken(email);
+        return stored != null && stored.equals(refreshToken);
+    }
+
+    public void removeToken(String email) {
         redisTemplate.delete("refresh:" + email);
     }
 }

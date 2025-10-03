@@ -7,7 +7,6 @@ import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.service.AuthService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class MeControllerTest {
+class AuthControllerTest {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -38,11 +37,6 @@ class MeControllerTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
-    @BeforeEach
-    void setup() {
-        // DB 초기화 필요하면 여기서 UserRepository.deleteAll() 호출 가능
-    }
 
     @Test
     @DisplayName("정상 토큰으로 /me 호출 시 사용자 정보 반환")

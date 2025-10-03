@@ -8,6 +8,7 @@ import com.daeul.auth.dto.TokenResponse;
 import com.daeul.auth.dto.UserResponse;
 import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.exception.InvalidPasswordException;
+import com.daeul.auth.exception.InvalidRefreshTokenException;
 import com.daeul.auth.exception.UserNotFoundException;
 import com.daeul.auth.security.JwtTokenProvider;
 import com.daeul.auth.security.LoginRateLimiter;
@@ -54,7 +55,7 @@ public class AuthService {
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
 
         // 4. RefreshToken 저장 (Redis)
-        refreshTokenStore.save(user.getEmail(), refreshToken);
+        refreshTokenStore.saveToken(user.getEmail(), refreshToken);
 
         return new TokenResponse(accessToken, refreshToken);
     }
@@ -70,22 +71,21 @@ public class AuthService {
     }
 
 
-//    public TokenResponse reissue(String email, String refreshToken) {
-//        if (!refreshTokenStore.validateToken(email, refreshToken)) {
-//            throw new RuntimeException("Refresh Token 불일치");
-//        }
-//
-//        String newAccessToken = jwtTokenProvider.generateAccessToken(email);
-//        String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
-//
-//        refreshTokenStore.saveToken(email, newRefreshToken); // 기존 토큰 갱신
-//
-//        return new TokenResponse(newAccessToken, newRefreshToken);
-//    }
-//
-//    public void logout(String email) {
-//        refreshTokenStore.removeToken(email);
-//    }
+    public TokenResponse reissue(String email, String refreshToken) {
+        if (!refreshTokenStore.validateToken(email, refreshToken)) {
+            throw new InvalidRefreshTokenException("유효하지 않은 Refresh Token입니다.");
+        }
 
+        String newAccessToken = jwtTokenProvider.generateAccessToken(email);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
+
+        refreshTokenStore.saveToken(email, newRefreshToken);
+
+        return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    public void logout(String email) {
+        refreshTokenStore.removeToken(email);
+    }
 
 }
