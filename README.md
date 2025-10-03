@@ -52,3 +52,9 @@ erDiagram
   - Key Prefix: `refresh:{userId}`  
   - Value: Refresh Token 문자열 (JWT)  
   - TTL: 7일
+
+### 6. 테스트 결과
+
+- JUnit 단위 테스트 14개 모두 성공 
+
+![테스트 결과](./docs/test-result.png)
