@@ -6,6 +6,7 @@ import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.exception.InvalidPasswordException;
 import com.daeul.auth.exception.InvalidRefreshTokenException;
+import com.daeul.auth.exception.InvalidTokenException;
 import com.daeul.auth.exception.TooManyLoginAttemptsException;
 import com.daeul.auth.exception.UserNotFoundException;
 import com.daeul.auth.security.RefreshTokenStore;
@@ -220,7 +221,7 @@ class AuthServiceTest {
 
         // when & then
         assertThatThrownBy(() -> authService.reissue("fake-refresh-token"))
-                .isInstanceOf(InvalidRefreshTokenException.class)
+                .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining(INVALID_TOKEN.getMessage());
     }
 
