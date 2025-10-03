@@ -1,5 +1,7 @@
 package com.daeul.auth.security;
 
+import com.daeul.auth.exception.ExpiredTokenException;
+import com.daeul.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -37,8 +39,10 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
+        } catch (ExpiredJwtException e) {
+            throw new ExpiredTokenException("토큰이 만료되었습니다.");
         } catch (JwtException | IllegalArgumentException e) {
-            throw new RuntimeException("토큰 검증 실패");
+            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
         }
     }
 }

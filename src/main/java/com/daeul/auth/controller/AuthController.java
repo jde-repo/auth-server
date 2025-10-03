@@ -4,6 +4,7 @@ import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
+import com.daeul.auth.dto.UserResponse;
 import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.service.AuthService;
 import javax.servlet.http.HttpServletRequest;
@@ -50,7 +51,7 @@ public class AuthController {
 
 
     @GetMapping("/me")
-    public User getUserInfo(@RequestHeader("Authorization") String authHeader) {
+    public UserResponse getUserInfo(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         return authService.getUserInfo(token);
     }

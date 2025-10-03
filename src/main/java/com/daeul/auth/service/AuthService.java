@@ -5,6 +5,7 @@ import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
+import com.daeul.auth.dto.UserResponse;
 import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.exception.InvalidPasswordException;
 import com.daeul.auth.exception.UserNotFoundException;
@@ -60,10 +61,12 @@ public class AuthService {
 
 
 
-    public User getUserInfo(String token) {
+    public UserResponse getUserInfo(String token) {
         String email = jwtTokenProvider.validateAndGetEmail(token);
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("유저 없음"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("해당 사용자가 존재하지 않습니다."));
+        return UserResponse.from(user);
     }
 
 
