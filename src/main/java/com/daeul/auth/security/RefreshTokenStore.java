@@ -1,21 +1,26 @@
 package com.daeul.auth.security;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class RefreshTokenStore {
-    private final ConcurrentHashMap<String, String> store = new ConcurrentHashMap<>();
 
-    public void saveToken(String email, String refreshToken) {
-        store.put(email, refreshToken);
+    private final StringRedisTemplate redisTemplate;
+    private static final long REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; // 7일 (초)
+
+    public void save(String email, String refreshToken) {
+        redisTemplate.opsForValue().set("refresh:" + email, refreshToken, REFRESH_TOKEN_TTL, TimeUnit.SECONDS);
     }
 
-    public boolean validateToken(String email, String refreshToken) {
-        return refreshToken.equals(store.get(email));
+    public String get(String email) {
+        return redisTemplate.opsForValue().get("refresh:" + email);
     }
 
-    public void removeToken(String email) {
-        store.remove(email);
+    public void delete(String email) {
+        redisTemplate.delete("refresh:" + email);
     }
 }

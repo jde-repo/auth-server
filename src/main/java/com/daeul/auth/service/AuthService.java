@@ -6,7 +6,10 @@ import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
 import com.daeul.auth.exception.DuplicateEmailException;
+import com.daeul.auth.exception.InvalidPasswordException;
+import com.daeul.auth.exception.UserNotFoundException;
 import com.daeul.auth.security.JwtTokenProvider;
+import com.daeul.auth.security.LoginRateLimiter;
 import com.daeul.auth.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +23,7 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenStore refreshTokenStore;
+    private final LoginRateLimiter loginRateLimiter;
 
     public void signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -32,19 +36,29 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request, String ip) {
+        // 1. IP 기반 Rate-Limiting
+        loginRateLimiter.checkRateLimit(ip);
+
+        // 2. 사용자 검증
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 이메일"));
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 이메일입니다."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("비밀번호 불일치");
+            throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
         }
 
+        // 3. 토큰 발급
         String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
 
+        // 4. RefreshToken 저장 (Redis)
+        refreshTokenStore.save(user.getEmail(), refreshToken);
+
         return new TokenResponse(accessToken, refreshToken);
     }
+
+
 
     public User getUserInfo(String token) {
         String email = jwtTokenProvider.validateAndGetEmail(token);
@@ -53,22 +67,22 @@ public class AuthService {
     }
 
 
-    public TokenResponse reissue(String email, String refreshToken) {
-        if (!refreshTokenStore.validateToken(email, refreshToken)) {
-            throw new RuntimeException("Refresh Token 불일치");
-        }
-
-        String newAccessToken = jwtTokenProvider.generateAccessToken(email);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
-
-        refreshTokenStore.saveToken(email, newRefreshToken); // 기존 토큰 갱신
-
-        return new TokenResponse(newAccessToken, newRefreshToken);
-    }
-
-    public void logout(String email) {
-        refreshTokenStore.removeToken(email);
-    }
+//    public TokenResponse reissue(String email, String refreshToken) {
+//        if (!refreshTokenStore.validateToken(email, refreshToken)) {
+//            throw new RuntimeException("Refresh Token 불일치");
+//        }
+//
+//        String newAccessToken = jwtTokenProvider.generateAccessToken(email);
+//        String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
+//
+//        refreshTokenStore.saveToken(email, newRefreshToken); // 기존 토큰 갱신
+//
+//        return new TokenResponse(newAccessToken, newRefreshToken);
+//    }
+//
+//    public void logout(String email) {
+//        refreshTokenStore.removeToken(email);
+//    }
 
 
 }
