@@ -5,6 +5,7 @@ import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
+import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.security.JwtTokenProvider;
 import com.daeul.auth.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +23,12 @@ public class AuthService {
 
     public void signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("이미 가입된 이메일입니다.");
+            throw new DuplicateEmailException("이미 가입된 이메일입니다.");
         }
-
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
-
         userRepository.save(user);
     }
 
@@ -70,4 +69,6 @@ public class AuthService {
     public void logout(String email) {
         refreshTokenStore.removeToken(email);
     }
+
+
 }

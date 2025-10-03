@@ -2,6 +2,7 @@ package com.daeul.auth.service;
 
 import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
+import com.daeul.auth.exception.DuplicateEmailException;
 import org.junit.jupiter.api.Test;
 
 import com.daeul.auth.dto.LoginRequest;
@@ -47,6 +48,29 @@ class AuthServiceTest {
         User saved = userRepository.findByEmail("test@test.com").orElse(null);
         assertThat(saved).isNotNull();
         assertThat(passwordEncoder.matches("password123", saved.getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("중복 이메일은 회원가입 안됨")
+    void signupDupTest() {
+        // given
+        SignupRequest request1 = SignupRequest.builder()
+                .email("test@test.com")
+                .password("password123")
+                .build();
+
+        SignupRequest request2 = SignupRequest.builder()
+                .email("test@test.com") // 동일한 이메일
+                .password("password456")
+                .build();
+
+        // when
+        authService.signup(request1); // 첫 가입은 성공
+
+        // then - 두 번째 가입은 DuplicateEmailException 발생해야 함
+        assertThatThrownBy(() -> authService.signup(request2))
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessage("이미 가입된 이메일입니다.");
     }
 
     @Test

@@ -4,8 +4,11 @@ import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.dto.LoginRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
+import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,10 +25,11 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public String signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<String> signup(@RequestBody SignupRequest request) {
         authService.signup(request);
-        return "회원가입 성공";
+        return ResponseEntity.ok("회원가입 성공");
     }
+
 
     @PostMapping("/login")
     public TokenResponse login(@RequestBody LoginRequest request) {
