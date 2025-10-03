@@ -3,9 +3,11 @@ package com.daeul.auth.security;
 import com.daeul.auth.exception.TooManyLoginAttemptsException;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class LoginRateLimiter {
@@ -22,6 +24,7 @@ public class LoginRateLimiter {
         }
 
         if (count != null && count > MAX_ATTEMPTS) {
+            log.warn("로그인 시도 차단 - ip={} attemptCnt={}", ip, count);
             throw new TooManyLoginAttemptsException("로그인 시도가 너무 많습니다. 잠시 후 다시 시도하세요.");
         }
     }
