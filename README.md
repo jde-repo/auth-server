@@ -77,3 +77,4 @@ erDiagram
 - **Spring Data JPA**: 복잡한 SQL 없이 엔티티 중심으로 개발이 가능해 생산성이 높았습니다.
 - **JUnit / Mockito**: 주요 인증 로직과 예외 케이스를 빠르게 검증할 수 있어 테스트 작성이 편했습니다.
 - **Swagger**: API 문서 자동화 편의성을 위해 사용했습니다.
+- **Spring Validation**: 회원가입, 로그인 요청 시 DTO 검증을 간단하게 처리했습니다.  
