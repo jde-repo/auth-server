@@ -5,7 +5,6 @@ import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.exception.DuplicateEmailException;
 import com.daeul.auth.exception.InvalidPasswordException;
-import com.daeul.auth.exception.InvalidRefreshTokenException;
 import com.daeul.auth.exception.InvalidTokenException;
 import com.daeul.auth.exception.TooManyLoginAttemptsException;
 import com.daeul.auth.exception.UserNotFoundException;
@@ -242,7 +241,7 @@ class AuthServiceTest {
         TokenResponse tokens = authService.login(loginRequest, "127.0.0.1");
 
         // 로그아웃 실행
-        authService.logout("logout@test.com");
+        authService.logout(tokens.getAccessToken());
 
         Optional<User> userOp = userRepository.findByEmail("logout@test.com");
 
@@ -268,7 +267,7 @@ class AuthServiceTest {
         TokenResponse tokens = authService.login(loginRequest, "127.0.0.1");
 
         // 로그아웃 실행
-        authService.logout("reuse@test.com");
+        authService.logout(tokens.getAccessToken());
 
         // when & then
         assertThatThrownBy(() ->

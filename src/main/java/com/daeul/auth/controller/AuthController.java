@@ -1,7 +1,6 @@
 package com.daeul.auth.controller;
 
 import com.daeul.auth.dto.LoginRequest;
-import com.daeul.auth.dto.LogoutRequest;
 import com.daeul.auth.dto.ReissueRequest;
 import com.daeul.auth.dto.SignupRequest;
 import com.daeul.auth.dto.TokenResponse;
@@ -10,6 +9,7 @@ import com.daeul.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,14 +30,14 @@ public class AuthController {
 
     @Operation(summary = "회원가입", description = "이메일과 비밀번호로 회원가입을 수행합니다.")
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<String> signup(@RequestBody @Valid SignupRequest request) {
         authService.signup(request);
         return ResponseEntity.ok("회원가입 성공");
     }
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인하여 AccessToken과 RefreshToken을 발급합니다.")
     @PostMapping("/login")
-    public TokenResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+    public TokenResponse login(@RequestBody @Valid LoginRequest request, HttpServletRequest httpRequest) {
         String ip = httpRequest.getRemoteAddr();
         return authService.login(request, ip);
     }
@@ -50,8 +50,9 @@ public class AuthController {
 
     @Operation(summary = "로그아웃", description = "RefreshToken을 무효화합니다.")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestBody LogoutRequest request) {
-        authService.logout(request.getEmail());
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        authService.logout(token);
         return ResponseEntity.noContent().build();
     }
 

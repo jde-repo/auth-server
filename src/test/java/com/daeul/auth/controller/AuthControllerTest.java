@@ -2,8 +2,6 @@ package com.daeul.auth.controller;
 
 import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
-import com.daeul.auth.dto.LoginRequest;
-import com.daeul.auth.exception.InvalidPasswordException;
 import com.daeul.auth.security.JwtTokenProvider;
 import io.jsonwebtoken.Jwts;
 import java.util.Optional;
@@ -20,7 +18,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.Date;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import io.jsonwebtoken.SignatureAlgorithm;

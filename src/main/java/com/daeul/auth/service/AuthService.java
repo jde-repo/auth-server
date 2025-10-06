@@ -16,7 +16,6 @@ import com.daeul.auth.exception.UserNotFoundException;
 import com.daeul.auth.security.JwtTokenProvider;
 import com.daeul.auth.security.LoginRateLimiter;
 import com.daeul.auth.security.RefreshTokenStore;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -90,9 +89,9 @@ public class AuthService {
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
-    public void logout(String email) {
-        Optional<User> userOp = userRepository.findByEmail(email);
-        userOp.ifPresent(user -> refreshTokenStore.removeToken(user.getId()));
+    public void logout(String token) {
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        refreshTokenStore.removeToken(userId);
     }
 
 }

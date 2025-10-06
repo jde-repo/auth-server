@@ -7,7 +7,6 @@ import com.daeul.auth.common.ExceptionMessages;
 import com.daeul.auth.domain.entity.User;
 import com.daeul.auth.domain.repository.UserRepository;
 import com.daeul.auth.exception.ExpiredTokenException;
-import com.daeul.auth.exception.InvalidRefreshTokenException;
 import com.daeul.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.*;
 import java.util.Collections;
@@ -61,20 +60,6 @@ public class JwtTokenProvider {
                 .build();
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
-
-    public String validateAndGetEmail(String token) {
-        try {
-            return Jwts.parser()
-                    .setSigningKey(jwtProperties.getSecret())
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getSubject();
-        } catch (ExpiredJwtException e) {
-            throw new ExpiredTokenException(EXPIRED_TOKEN.getMessage());
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new InvalidTokenException(INVALID_TOKEN.getMessage());
-        }
     }
 
     public Long getUserIdFromToken(String token) {
