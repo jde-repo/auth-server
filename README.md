@@ -78,3 +78,13 @@ erDiagram
 - **JUnit / Mockito**: 주요 인증 로직과 예외 케이스를 빠르게 검증할 수 있어 테스트 작성이 편했습니다.
 - **Swagger**: API 문서 자동화 편의성을 위해 사용했습니다.
 - **Spring Validation**: 회원가입, 로그인 요청 시 DTO 검증을 간단하게 처리했습니다.  
+
+
+### 8. Docker Compose 로컬 실행 환경
+
+로컬 환경에서 애플리케이션, MySQL, Redis를 함께 실행하기 위해 `docker-compose.yml`을 제공합니다.
+
+#### 실행 방법
+```bash
+docker-compose up --build
+```
