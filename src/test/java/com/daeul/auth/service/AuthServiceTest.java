@@ -21,12 +21,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.daeul.auth.common.ExceptionMessages.EMAIL_ALREADY_EXISTS;
 import static com.daeul.auth.common.ExceptionMessages.INVALID_TOKEN;
 import static org.assertj.core.api.Assertions.*;
 
+@ActiveProfiles("local")
 @SpringBootTest
 @Transactional
 class AuthServiceTest {

@@ -78,6 +78,6 @@ class AuthControllerValidationTest {
                         .content(blankPasswordJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].defaultMessage")
-                        .value("비밀번호는 8자 이상 20자 이하로 입력해주세요."));
+                        .value("비밀번호는 필수 입력값입니다."));
     }
 }

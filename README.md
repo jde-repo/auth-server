@@ -18,9 +18,24 @@ CREATE DATABASE authdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 3. 애플리케이션 실행
+
+
+### 3. 애플리케이션 실행 
+1️⃣ Gradle로 실행 (개발용, local 프로필)
+- application-local.yml 설정 사용
+- 로컬 환경에서 MySQL/Redis가 설치되어 있어야 함
 ```
 ./gradlew bootRun
 ```
+2️⃣ Docker Compose로 실행 (통합 환경, docker 프로필)
+- mysql, redis, auth-server 컨테이너가 함께 실행됨
+- application-docker.yml 설정 사용
+
+```
+docker compose up --build
+```
+
+- Swagger: http://localhost:8080/swagger-ui.html
 
 ### 4. API 명세
 - Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
@@ -55,7 +70,7 @@ erDiagram
 
 ### 6. 테스트 결과
 
-- JUnit 단위 테스트 14개 모두 성공 
+- JUnit 단위 테스트 17개 모두 성공 
 
 ![테스트 결과](./docs/test-result.png)
 
@@ -78,13 +93,3 @@ erDiagram
 - **JUnit / Mockito**: 주요 인증 로직과 예외 케이스를 빠르게 검증할 수 있어 테스트 작성이 편했습니다.
 - **Swagger**: API 문서 자동화 편의성을 위해 사용했습니다.
 - **Spring Validation**: 회원가입, 로그인 요청 시 DTO 검증을 간단하게 처리했습니다.  
-
-
-### 8. Docker Compose 로컬 실행 환경
-
-로컬 환경에서 애플리케이션, MySQL, Redis를 함께 실행하기 위해 `docker-compose.yml`을 제공합니다.
-
-#### 실행 방법
-```bash
-docker-compose up --build
-```
